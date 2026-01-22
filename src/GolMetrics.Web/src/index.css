@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme inline {
+    --font-sans: "Noto Sans", sans-serif;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --color-background: #0a1628;
+    --color-foreground: #ffffff;
+
+    --color-primary: #4d8eff;
+    --color-primary-foreground: #ffffff;
+
+    --color-secondary: #272e3a;
+    --color-secondary-foreground: #ffffff;
+
+    --color-accent: #ffdd57;
+    --color-accent-foreground: #000000;
+
+    --color-muted: rgba(255, 255, 255, 0.1);
+    --color-muted-foreground: #9aa6bc;
+
+    --color-card: rgba(0, 0, 0, 0.6);
+    --color-card-foreground: #ffffff;
+
+    --color-ring: #4d8eff;
+
+    --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-float: float 6s ease-in-out infinite;
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+}
+
+* {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+}
+
+.font-display {
+    font-family: var(--font-display);
+}
+
+.font-mono {
+    font-family: var(--font-mono);
+}
+
+.glass-panel {
+    background: rgba(15, 22, 35, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(77, 142, 255, 0.2);
+}
+
+.grid-bg {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.text-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.text-glow-gold {
+    text-shadow: 0 0 10px rgba(255, 221, 87, 0.5);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
