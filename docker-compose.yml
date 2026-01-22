@@ -1,0 +1,40 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/GolMetrics.API/Dockerfile
+    container_name: golmetrics.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=golmetrics_db;Username=admin;Password=password123
+    ports:
+      - "7000:8080"
+    depends_on:
+      - db
+  
+  web:
+    build:
+      context: ./src/GolMetrics.Web
+      dockerfile: Dockerfile
+    container_name: golmetrics.web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:7000
+    depends_on:
+      - api
+  
+  db:
+    image: postgres:16-alpine
+    container_name: golmetrics.db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: golmetrics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
