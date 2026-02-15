@@ -6,8 +6,8 @@ context: |
   - .NET 10 Minimal API targeting `net10.0`
   - PostgreSQL 16 with EF Core, snake_case naming, enum-as-string conversion
   - MediatR NuGet package: `ISender`, `IRequest<T>`, `IRequestHandler<TRequest, TResponse>`, `IPipelineBehavior<,>` for validation pipeline
-  - Custom Result<T> pattern with `Error(Code, Message, ErrorCategory)`, `ErrorCategory` enum (BadRequest/Unauthorized/Forbidden/NotFound/Conflict), `Result.Failure()`, implicit success conversion, `ToProblemDetails()` extension -- follows `project-task-management/src/ProjectManagement.Api/Core/Domain/Abstractions/`
-  - Vertical Slice architecture: `internal sealed class : ISlice` with nested `internal sealed` Command/Query/Validator/Handler; `public sealed record` for DTOs -- follows `project-task-management/src/ProjectManagement.Api/Features/`
+  - Custom Result<T> pattern with `Error(Code, Message, ErrorCategory)`, `ErrorCategory` enum (BadRequest/Unauthorized/Forbidden/NotFound/Conflict), `Result.Failure()`, implicit success conversion, `ToProblemDetails()` extension -- defined in project-setup/spec.md
+  - Vertical Slice architecture: `internal sealed class : ISlice` with nested `internal sealed` Command/Query/Validator/Handler; `public sealed record` for DTOs -- defined in architecture/spec.md
   - ASP.NET Identity (`UserManager<User>`, `SignInManager<User>`) + JWT Bearer authentication
   - Permission-based authorization via `RequirePermissions()` + `PermissionAuthorizationHandler`
   - FluentValidation with C# 14 extension methods for reusable rules + `ValidationBehavior<,>` pipeline behavior
@@ -38,7 +38,7 @@ rules:
     - Specify HTTP status codes for all API endpoint scenarios
     - Define feature-specific errors as static properties on `<Feature>Errors.cs` classes
   design:
-    - Follow Vertical Slice pattern from `project-task-management/`: `internal sealed class : ISlice` (never public)
+    - Follow Vertical Slice pattern as defined in project-setup/spec.md and architecture/spec.md: `internal sealed class : ISlice` (never public)
     - Nest Command/Query/Validator/Handler as `internal sealed` classes inside the slice
     - Use `public sealed record` for all DTOs (requests, responses)
     - Dispatch commands/queries via MediatR `ISender.Send()`, never call handlers directly
