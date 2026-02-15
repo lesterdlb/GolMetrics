@@ -1,10 +1,4 @@
-# Database Infrastructure
-
-## Purpose
-
-Specifies EF Core infrastructure configuration beyond entity definitions: interceptors for audit field automation, snake_case naming convention, and migration strategy. Entity definitions and per-entity Fluent API configurations are covered in `data-model/spec.md`.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: SaveChanges Interceptor
 
@@ -31,39 +25,6 @@ The system SHALL automatically populate audit fields during persistence operatio
 
 - **WHEN** `SaveChangesAsync` is called and `User` entities (which extend `IdentityUser<Guid>`, not `Entity`) are in `Added` or `Modified` state
 - **THEN** the same audit field rules SHALL apply via a separate `ChangeTracker.Entries<User>()` iteration
-
-### Requirement: Snake Case Naming Convention
-
-The system SHALL apply snake_case naming to all database objects.
-
-#### Scenario: Naming convention application
-
-- **WHEN** the EF Core model is built
-- **THEN** `UseSnakeCaseNamingConvention()` SHALL be applied via the `EFCore.NamingConventions` NuGet package
-- **AND** all table names, column names, and index names SHALL be in snake_case
-
-### Requirement: Enum Storage
-
-The system SHALL store enum properties as strings.
-
-#### Scenario: Enum column type
-
-- **WHEN** an entity contains an enum property
-- **THEN** EF Core SHALL store it as a string via `HasConversion<string>()`
-
-### Requirement: Optimistic Concurrency
-
-The system SHALL use optimistic concurrency control via row versioning.
-
-#### Scenario: Concurrency token configuration
-
-- **WHEN** an entity inherits from `Entity`
-- **THEN** the `Version` property (uint) SHALL be configured as a concurrency token
-
-#### Scenario: Concurrency conflict handling
-
-- **WHEN** a concurrency conflict occurs during `SaveChangesAsync`
-- **THEN** the database exception handler SHALL return HTTP 409 Conflict
 
 ### Requirement: Migration Strategy
 

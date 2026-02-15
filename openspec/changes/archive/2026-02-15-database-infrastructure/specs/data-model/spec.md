@@ -1,20 +1,4 @@
-# Data Model
-
-## Purpose
-
-Defines the EF Core data model, entity configurations, database context, and persistence conventions for all domain entities.
-
-## Requirements
-
-### Requirement: User Entity
-
-The system SHALL define a `User` entity extending `IdentityUser<Guid>` with audit fields from `Entity`.
-
-#### Scenario: User properties
-
-- **WHEN** a User entity is created
-- **THEN** it SHALL include `EncryptedApiKey` (string, nullable) for BYOK storage
-- **AND** it SHALL include `CreatedBy`, `LastModifiedBy`, `CreatedAtUtc`, `UpdatedAtUtc`, and `Version` from the base Entity
+## ADDED Requirements
 
 ### Requirement: Conversation Entity
 
@@ -44,17 +28,6 @@ The system SHALL define a `CachedQuery` entity inheriting from `Entity` in `Feat
 
 - **WHEN** a CachedQuery entity is created
 - **THEN** it SHALL include `QueryHash` (string), `Endpoint` (string), `Params` (string, JSONB), `ResponseData` (string, JSONB), `ExpiresAt` (DateTime)
-
-### Requirement: Abstract Entity Configuration Base
-
-The system SHALL provide an abstract `EntityConfiguration<TEntity>` base class for EF Core configurations.
-
-#### Scenario: Base configuration
-
-- **WHEN** an entity configuration inherits from `EntityConfiguration<TEntity>`
-- **THEN** it SHALL automatically configure `Id` as the primary key
-- **AND** it SHALL configure `Version` as a concurrency token (row version)
-- **AND** it SHALL configure `CreatedAtUtc`, `UpdatedAtUtc`, `CreatedBy`, `LastModifiedBy` columns
 
 ### Requirement: User Entity Configuration
 
@@ -108,24 +81,3 @@ The system SHALL register DbSet properties on `GolMetricsDbContext` for all doma
 
 - **WHEN** the DbContext is used
 - **THEN** it SHALL expose `DbSet<Conversation>`, `DbSet<Message>`, and `DbSet<CachedQuery>` properties
-
-### Requirement: Database Context
-
-The system SHALL provide `GolMetricsDbContext` extending `IdentityDbContext<User, IdentityRole<Guid>, Guid>`.
-
-#### Scenario: Audit field automation
-
-- **WHEN** `SaveChangesAsync` is called
-- **THEN** the context SHALL automatically set `CreatedAtUtc` and `CreatedBy` on added entities
-- **AND** it SHALL set `UpdatedAtUtc` and `LastModifiedBy` on modified entities
-- **AND** it SHALL resolve the current user via `ICurrentUserService`
-
-#### Scenario: Naming convention
-
-- **WHEN** the model is built
-- **THEN** `UseSnakeCaseNamingConvention()` SHALL be applied to all table and column names
-
-#### Scenario: Enum storage
-
-- **WHEN** an entity contains an enum property
-- **THEN** EF Core SHALL store it as a string, not an integer

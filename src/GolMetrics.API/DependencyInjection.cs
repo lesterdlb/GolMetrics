@@ -40,10 +40,13 @@ public static class DependencyInjection
 
         public WebApplicationBuilder AddDatabase()
         {
-            builder.Services.AddDbContext<GolMetricsDbContext>(options =>
+            builder.Services.AddScoped<AuditableEntityInterceptor>();
+
+            builder.Services.AddDbContext<GolMetricsDbContext>((sp, options) =>
                 options
                     .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-                    .UseSnakeCaseNamingConvention());
+                    .UseSnakeCaseNamingConvention()
+                    .AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>()));
 
             return builder;
         }
