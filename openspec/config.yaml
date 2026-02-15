@@ -1,0 +1,62 @@
+schema: spec-driven
+
+context: |
+  GolMetrics is a football statistics chatbot built with:
+
+  - .NET 10 Minimal API targeting `net10.0`
+  - PostgreSQL 16 with EF Core, snake_case naming, enum-as-string conversion
+  - MediatR NuGet package: `ISender`, `IRequest<T>`, `IRequestHandler<TRequest, TResponse>`, `IPipelineBehavior<,>` for validation pipeline
+  - Custom Result<T> pattern with `Error(Code, Message, ErrorCategory)`, `ErrorCategory` enum (BadRequest/Unauthorized/Forbidden/NotFound/Conflict), `Result.Failure()`, implicit success conversion, `ToProblemDetails()` extension -- follows `project-task-management/src/ProjectManagement.Api/Core/Domain/Abstractions/`
+  - Vertical Slice architecture: `internal sealed class : ISlice` with nested `internal sealed` Command/Query/Validator/Handler; `public sealed record` for DTOs -- follows `project-task-management/src/ProjectManagement.Api/Features/`
+  - ASP.NET Identity (`UserManager<User>`, `SignInManager<User>`) + JWT Bearer authentication
+  - Permission-based authorization via `RequirePermissions()` + `PermissionAuthorizationHandler`
+  - FluentValidation with C# 14 extension methods for reusable rules + `ValidationBehavior<,>` pipeline behavior
+  - EF Core: abstract `EntityConfiguration<TEntity>` base class, snake_case naming (`UseSnakeCaseNamingConvention()`), enum-as-string, `SaveChangesAsync` override for audit fields, optimistic concurrency (`uint Version`)
+  - 4 exception handlers in priority order: Validation -> Database -> Json -> Global, all returning ProblemDetails
+  - Route constants in `EndpointNames.cs`
+  - Serilog structured logging
+  - Semantic Kernel + Google Gemini for AI chat processing
+  - AES-256 BYOK encryption for user API keys
+  - 4 domain entities: User, Conversation, Message, CachedQuery
+  - External integrations: API-Football v3, Google Gemini
+  - React 19 + Vite + TypeScript frontend (`src/GolMetrics.Web/`)
+  - Tailwind CSS + shadcn/ui for styling and components
+  - Zustand for state management, React Router for routing, Axios for HTTP
+  - `VITE_API_URL` env var for backend communication
+  - Conventions: English only, no explanatory comments, self-documenting code, no emojis
+
+rules:
+  proposal:
+    - Reference the TICK-XXX ticket number in the proposal title and description
+    - Scope proposals to backend (`src/GolMetrics.API/`) and/or frontend (`src/GolMetrics.Web/`) changes
+    - Identify which capability specs are new vs modified by this change
+    - Include a "Dependencies" section listing NuGet packages or infrastructure changes required
+  specs:
+    - Write requirements in WHEN/THEN/AND scenario format
+    - Use "SHALL" phrasing for all requirements (e.g., "The system SHALL return 201")
+    - Include error and edge-case scenarios for every requirement
+    - Specify HTTP status codes for all API endpoint scenarios
+    - Define feature-specific errors as static properties on `<Feature>Errors.cs` classes
+  design:
+    - Follow Vertical Slice pattern from `project-task-management/`: `internal sealed class : ISlice` (never public)
+    - Nest Command/Query/Validator/Handler as `internal sealed` classes inside the slice
+    - Use `public sealed record` for all DTOs (requests, responses)
+    - Dispatch commands/queries via MediatR `ISender.Send()`, never call handlers directly
+    - Return `Result.Failure()` for business errors; never throw exceptions for expected failures
+    - Define feature-specific errors as static properties in `<Feature>Errors.cs` files
+    - Use `ToProblemDetails()` extension to convert Result errors to HTTP responses
+    - Apply `RequirePermissions()` on all protected endpoints
+    - EF entity configurations must inherit `EntityConfiguration<TEntity>` abstract base
+    - Register dependencies in `DependencyInjection.cs` via extension methods on `WebApplicationBuilder`
+    - Place feature files under `src/GolMetrics.API/Features/<FeatureName>/`
+    - Place shared abstractions under `src/GolMetrics.API/Core/`
+    - Place frontend pages under `src/GolMetrics.Web/src/pages/`
+    - Place reusable frontend components under `src/GolMetrics.Web/src/components/`
+    - Place Zustand stores under `src/GolMetrics.Web/src/store/`
+    - Place API services under `src/GolMetrics.Web/src/services/`
+  tasks:
+    - Specify exact file paths relative to repository root for every file to create or modify
+    - Include NuGet package installation commands when new packages are needed
+    - Include EF Core migration commands when schema changes are required
+    - End each task group with a verification step (build, test, or curl command)
+    - Order tasks so infrastructure/shared code comes before feature code
