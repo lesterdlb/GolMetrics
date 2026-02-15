@@ -7,12 +7,14 @@ using GolMetrics.API.Core.Exceptions;
 using GolMetrics.API.Core.Extensions;
 using GolMetrics.API.Core.Identity;
 using GolMetrics.API.Core.Persistence;
+using GolMetrics.API.Features.FootballData;
 using GolMetrics.API.Features.UserManagement;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.SemanticKernel;
 using Serilog;
 
 namespace GolMetrics.API;
@@ -109,6 +111,45 @@ public static class DependencyInjection
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });
+            });
+
+            return builder;
+        }
+
+        public WebApplicationBuilder AddSemanticKernel()
+        {
+            var geminiSection = builder.Configuration.GetSection("Gemini");
+            var modelId = geminiSection["ModelId"] ?? "gemini-2.0-flash";
+            var apiKey = geminiSection["ApiKey"]!;
+
+            builder.Services.AddSingleton(_ =>
+            {
+                var kernelBuilder = Kernel.CreateBuilder();
+                kernelBuilder.AddGoogleAIGeminiChatCompletion(modelId, apiKey);
+                return kernelBuilder.Build();
+            });
+
+            return builder;
+        }
+
+        public WebApplicationBuilder AddEncryptionServices()
+        {
+            builder.Services.AddSingleton<IEncryptionService>(sp =>
+            {
+                var encryptionKey = builder.Configuration["Encryption:Key"]!;
+                return ActivatorUtilities.CreateInstance<EncryptionService>(sp, encryptionKey);
+            });
+
+            return builder;
+        }
+
+        public WebApplicationBuilder AddFootballServices()
+        {
+            builder.Services.AddHttpClient<IFootballApiClient, FootballApiClient>(client =>
+            {
+                var baseUrl = builder.Configuration["ApiFootball:BaseUrl"]
+                              ?? "https://v3.football.api-sports.io";
+                client.BaseAddress = new Uri(baseUrl);
             });
 
             return builder;
