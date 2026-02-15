@@ -19,8 +19,8 @@ The system SHALL organize features as vertical slices using `internal sealed cla
 #### Scenario: Endpoint mapping
 
 - **WHEN** the application configures the HTTP pipeline
-- **THEN** `MapSliceEndpoints()` SHALL invoke `AddEndpoint(IEndpointRouteBuilder)` on every registered `ISlice`
-- **AND** each slice SHALL define its route, HTTP method, and handler within `AddEndpoint()`
+- **THEN** `MapSliceEndpoints()` SHALL invoke `RegisterEndpoints(IEndpointRouteBuilder)` on every registered `ISlice`
+- **AND** each slice SHALL define its route, HTTP method, and handler within `RegisterEndpoints()`
 
 #### Scenario: Slice internal structure
 
@@ -135,7 +135,7 @@ The system SHALL provide a base `Entity` class with common audit fields.
 #### Scenario: Entity fields
 
 - **WHEN** a domain entity inherits from `Entity`
-- **THEN** it SHALL have `Id` (Guid), `CreatedBy` (string), `LastModifiedBy` (string), `CreatedAtUtc` (DateTime), `UpdatedAtUtc` (DateTime), and `Version` (uint) properties
+- **THEN** it SHALL have `Id` (Guid), `CreatedBy` (Guid), `LastModifiedBy` (Guid?), `CreatedAtUtc` (DateTime), `UpdatedAtUtc` (DateTime?), and `Version` (uint) properties
 
 ### Requirement: ISlice Interface
 
@@ -144,7 +144,7 @@ The system SHALL define `ISlice` as the contract for vertical slice endpoint reg
 #### Scenario: Interface definition
 
 - **WHEN** a vertical slice implements `ISlice`
-- **THEN** it SHALL implement a single method `AddEndpoint(IEndpointRouteBuilder endpoints)`
+- **THEN** it SHALL implement a single method `RegisterEndpoints(IEndpointRouteBuilder routes)`
 
 #### Scenario: Slice discovery
 

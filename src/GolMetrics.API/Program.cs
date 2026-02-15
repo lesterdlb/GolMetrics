@@ -1,20 +1,22 @@
+using GolMetrics.API;
+using GolMetrics.API.Core.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
+builder
+    .AddApiServices()
+    .AddDatabase()
+    .AddAuthenticationServices()
+    .AddErrorHandling()
+    .AddCors();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -22,15 +24,6 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.UseCors("AllowAll");
-
-app.UseHttpsRedirection();
-
-app.MapPost("/api/chat", () => Results.Ok(new
-    {
-        response = "Hola desde Gol Metric API! ⚽️",
-        timestamp = DateTime.UtcNow
-    }))
-    .WithName("SendMessage");
+app.MapSliceEndpoints();
 
 await app.RunAsync();

@@ -1,0 +1,1 @@
+This change is a pure implementation of the existing `project-setup` and `architecture` capability specs. No requirements are being added, modified, or removed. All abstractions (Result, Error, Entity, ISlice, exception handlers, ValidationBehavior, CurrentUserService, EndpointNames, DependencyInjection, Permissions) are defined in the main specs and are being implemented as-is.
