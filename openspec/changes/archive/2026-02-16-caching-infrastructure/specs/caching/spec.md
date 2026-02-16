@@ -1,121 +1,27 @@
-# Caching
-
-## Purpose
-
-Provides a query-level cache for API-Football responses using SHA-256 hashing for cache keys and TTL-based expiration.
-
-## Requirements
-
-### Requirement: Cache Key Generation
-
-The system SHALL generate deterministic cache keys using SHA-256 hashing.
-
-#### Scenario: Key generation
-
-- **WHEN** a football API request is made with an endpoint and parameters
-- **THEN** the system SHALL normalize parameters by sorting them alphabetically
-- **AND** it SHALL compute a SHA-256 hash of the concatenated endpoint and sorted parameters
-- **AND** this hash SHALL be used as the `QueryHash` for cache lookup
-
-#### Scenario: Parameter order independence
-
-- **WHEN** two requests have the same endpoint and parameters but in different order
-- **THEN** the system SHALL generate the same cache key for both requests
-
-### Requirement: Cache Lookup
-
-The system SHALL check the cache before making external API calls.
-
-#### Scenario: Cache hit
-
-- **WHEN** a cache entry exists with a matching `QueryHash`
-- **AND** `ExpiresAt` is greater than the current UTC time
-- **THEN** the system SHALL return the stored `ResponseData` without calling API-Football
-
-#### Scenario: Cache miss
-
-- **WHEN** no cache entry exists with a matching `QueryHash`
-- **THEN** the system SHALL call API-Football, store the response as a new `CachedQuery`, and return the response
-
-#### Scenario: Cache expired
-
-- **WHEN** a cache entry exists with a matching `QueryHash`
-- **AND** `ExpiresAt` is less than or equal to the current UTC time
-- **THEN** the system SHALL treat this as a cache miss
-- **AND** it SHALL update the existing entry with the new response and expiration
-
-### Requirement: TTL Strategy
-
-The system SHALL apply different TTL values based on data freshness requirements.
-
-#### Scenario: Historical data
-
-- **WHEN** the queried data is from a completed season or historical records
-- **THEN** the cache TTL SHALL be 30 days
-
-#### Scenario: Current season data
-
-- **WHEN** the queried data is from the current active season (standings, statistics)
-- **THEN** the cache TTL SHALL be 1 hour
-
-#### Scenario: Live or upcoming data
-
-- **WHEN** the queried data is for upcoming or live matches
-- **THEN** the cache TTL SHALL be 5 minutes
-
-### Requirement: Cache Service Interface
-
-The system SHALL provide `ICacheService` as the abstraction for cache operations.
-
-#### Scenario: Service methods
-
-- **WHEN** cache operations are needed
-- **THEN** `ICacheService` SHALL expose `GetOrSetAsync<T>(endpoint, params, fetchFactory, ttl)` method
-- **AND** it SHALL encapsulate key generation, lookup, storage, and TTL management
-
-### Requirement: Error Handling
-
-The system SHALL handle cache failures without blocking API responses.
-
-#### Scenario: Cache write failure
-
-- **WHEN** storing a cache entry fails (DB write error)
-- **THEN** the system SHALL return the fetched API response without caching (fail-open)
-
-#### Scenario: Concurrent cache miss
-
-- **WHEN** two concurrent requests miss the cache for the same key
-- **THEN** the system SHALL allow both to fetch from API-Football
-- **AND** the last write SHALL overwrite the first (no distributed locking required)
+## ADDED Requirements
 
 ### Requirement: ICacheService interface
-
 The system SHALL define `ICacheService` in the `Features/FootballData/` namespace with a single method: `Task<T> GetOrSetAsync<T>(string endpoint, Dictionary<string, string> parameters, Func<Task<T>> fetchFactory, TimeSpan ttl)`.
 
 #### Scenario: Interface definition
-
 - **WHEN** a feature needs to cache API-Football responses
 - **THEN** it SHALL depend on `ICacheService` via constructor injection
 - **AND** `ICacheService` SHALL expose only `GetOrSetAsync<T>` as its public contract
 
 ### Requirement: CacheService implementation
-
 The system SHALL implement `CacheService : ICacheService` as an `internal sealed class` in `Features/FootballData/` that uses `GolMetricsDbContext` and `TimeProvider` for all cache operations.
 
 #### Scenario: Service registration
-
 - **WHEN** the application starts
 - **THEN** `CacheService` SHALL be registered as a scoped service for `ICacheService` in `DependencyInjection.cs`
 
 #### Scenario: Cache hit returns stored data
-
 - **WHEN** `GetOrSetAsync<T>` is called with an endpoint and parameters
 - **AND** a `CachedQuery` exists with a matching `QueryHash` and `ExpiresAt > TimeProvider.GetUtcNow()`
 - **THEN** the service SHALL deserialize `ResponseData` to `T` and return it
 - **AND** it SHALL NOT invoke the `fetchFactory`
 
 #### Scenario: Cache miss fetches and stores
-
 - **WHEN** `GetOrSetAsync<T>` is called with an endpoint and parameters
 - **AND** no matching `CachedQuery` exists
 - **THEN** the service SHALL invoke `fetchFactory` to get the data
@@ -123,7 +29,6 @@ The system SHALL implement `CacheService : ICacheService` as an `internal sealed
 - **AND** it SHALL return the fetched data
 
 #### Scenario: Expired cache entry is refreshed
-
 - **WHEN** `GetOrSetAsync<T>` is called with an endpoint and parameters
 - **AND** a matching `CachedQuery` exists but `ExpiresAt <= TimeProvider.GetUtcNow()`
 - **THEN** the service SHALL invoke `fetchFactory` to get fresh data
@@ -131,35 +36,28 @@ The system SHALL implement `CacheService : ICacheService` as an `internal sealed
 - **AND** it SHALL return the fresh data
 
 ### Requirement: Deterministic cache key generation
-
 The system SHALL generate cache keys by normalizing parameters alphabetically and computing a SHA-256 hash of the concatenated endpoint and sorted parameters.
 
 #### Scenario: Same parameters in different order produce same key
-
 - **WHEN** two calls have endpoint `"fixtures"` with parameters `{"season": "2024", "league": "39"}` and `{"league": "39", "season": "2024"}`
 - **THEN** the generated `QueryHash` SHALL be identical for both calls
 
 #### Scenario: Different endpoints produce different keys
-
 - **WHEN** two calls have different endpoints but identical parameters
 - **THEN** the generated `QueryHash` SHALL be different
 
 ### Requirement: Fail-open cache write behavior
-
 The system SHALL return fetched data even if cache persistence fails.
 
 #### Scenario: Database write failure during cache store
-
 - **WHEN** `fetchFactory` succeeds but `SaveChangesAsync` throws an exception
 - **THEN** the service SHALL catch the exception, log a warning, and return the fetched data
 - **AND** the caller SHALL NOT receive an error
 
 ### Requirement: Concurrent cache miss tolerance
-
 The system SHALL allow concurrent requests to independently fetch and store cached data without distributed locking.
 
 #### Scenario: Two concurrent misses for the same key
-
 - **WHEN** two concurrent calls miss the cache for the same key
 - **THEN** both SHALL invoke their `fetchFactory` independently
 - **AND** the last `SaveChangesAsync` to complete SHALL overwrite the first

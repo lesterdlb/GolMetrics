@@ -34,6 +34,7 @@ public static class DependencyInjection
             builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
             builder.Services.AddSlices();
             builder.Services.AddOpenApi();
+            builder.Services.AddSingleton(TimeProvider.System);
             builder.Host.UseSerilog((context, configuration) =>
                 configuration.ReadFrom.Configuration(context.Configuration));
 
@@ -152,6 +153,8 @@ public static class DependencyInjection
                               ?? "https://v3.football.api-sports.io";
                 client.BaseAddress = new Uri(baseUrl);
             });
+
+            builder.Services.AddScoped<ICacheService, CacheService>();
 
             return builder;
         }
