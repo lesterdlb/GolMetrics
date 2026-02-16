@@ -147,12 +147,14 @@ public static class DependencyInjection
 
         public WebApplicationBuilder AddFootballServices()
         {
+            builder.Services.AddTransient<ApiKeyDelegatingHandler>();
+
             builder.Services.AddHttpClient<IFootballApiClient, FootballApiClient>(client =>
             {
                 var baseUrl = builder.Configuration["ApiFootball:BaseUrl"]
                               ?? "https://v3.football.api-sports.io";
                 client.BaseAddress = new Uri(baseUrl);
-            });
+            }).AddHttpMessageHandler<ApiKeyDelegatingHandler>();
 
             builder.Services.AddScoped<ICacheService, CacheService>();
 
