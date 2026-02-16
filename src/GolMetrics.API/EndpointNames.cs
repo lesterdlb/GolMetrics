@@ -30,6 +30,18 @@ public static class EndpointNames
         }
     }
 
+    public static class User
+    {
+        public const string GetProfile = nameof(GetProfile);
+        public const string UpdateApiKey = nameof(UpdateApiKey);
+
+        public static class Routes
+        {
+            public const string GetProfile = "/api/user/profile";
+            public const string UpdateApiKey = "/api/user/api-key";
+        }
+    }
+
     public static class Football
     {
         public const string GetStandings = nameof(GetStandings);
