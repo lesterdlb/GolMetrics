@@ -1,16 +1,8 @@
-# Authentication
-
-## Purpose
-
-Handles user registration, login, token refresh, JWT token generation, and current user resolution via ASP.NET Identity
-and JWT Bearer authentication.
-
-## Requirements
+## ADDED Requirements
 
 ### Requirement: User Registration Slice
 
-The system SHALL provide a Register slice at `Features/Auth/Register.cs` implementing `ISlice` as an
-`internal sealed class`.
+The system SHALL provide a Register slice at `Features/Auth/Register.cs` implementing `ISlice` as an `internal sealed class`.
 
 #### Scenario: Successful registration
 
@@ -62,13 +54,11 @@ The system SHALL provide a Login slice at `Features/Auth/Login.cs` implementing 
 
 ### Requirement: Refresh Token Slice
 
-The system SHALL provide a RefreshToken slice at `Features/Auth/RefreshToken.cs` implementing `ISlice` as an
-`internal sealed class`.
+The system SHALL provide a RefreshToken slice at `Features/Auth/RefreshToken.cs` implementing `ISlice` as an `internal sealed class`.
 
 #### Scenario: Successful token refresh
 
-- **WHEN** a valid `POST /api/auth/refresh-token` request is received with a valid, non-expired, non-revoked refresh
-  token
+- **WHEN** a valid `POST /api/auth/refresh-token` request is received with a valid, non-expired, non-revoked refresh token
 - **THEN** the system SHALL revoke the existing refresh token
 - **AND** it SHALL generate a new access token and refresh token pair via `ITokenService`
 - **AND** it SHALL return HTTP 200 with the new `AccessToken`, `RefreshToken`, and `ExpiresAtUtc`
@@ -81,72 +71,46 @@ The system SHALL provide a RefreshToken slice at `Features/Auth/RefreshToken.cs`
 
 ### Requirement: Token Service
 
-The system SHALL provide `ITokenService` in `Core/Abstractions/ITokenService.cs` and `TokenService` in
-`Core/Identity/TokenService.cs`.
+The system SHALL provide `ITokenService` in `Core/Abstractions/ITokenService.cs` and `TokenService` in `Core/Identity/TokenService.cs`.
 
 #### Scenario: Access token generation
 
 - **WHEN** `ITokenService.GenerateAccessToken(User user)` is called
 - **THEN** it SHALL create a JWT signed with HMAC-SHA256
-- **AND** it SHALL include claims: `sub` (user ID), `email`, and individual `permissions` claims for all permissions (
-  `conversations:read`, `conversations:write`, `user:read`, `user:write`)
+- **AND** it SHALL include claims: `sub` (user ID), `email`, and individual `permissions` claims for all permissions (`conversations:read`, `conversations:write`, `user:read`, `user:write`)
 - **AND** the token SHALL have a 7-day expiry
 - **AND** the signing key, issuer, and audience SHALL be read from `TokenOptions` configuration
 
-#### Scenario: Permission claims generation
-
-- **WHEN** `ITokenService` generates a JWT
-- **THEN** it SHALL include all user permissions as individual `permissions` claims: `conversations:read`,
-  `conversations:write`, `user:read`, `user:write`
-- **AND** all registered users SHALL receive all permissions (single role model)
-
 #### Scenario: Refresh token generation
 
-- **WHEN** `ITokenService.GenerateRefreshTokenAsync(Guid userId)` is called
+- **WHEN** `ITokenService.GenerateRefreshToken(Guid userId)` is called
 - **THEN** it SHALL create a cryptographically random token string
-- **AND** it SHALL persist a `RefreshTokenEntity` with `Token`, `UserId`, `ExpiresAtUtc` (30 days), and
-  `IsRevoked = false`
+- **AND** it SHALL persist a `RefreshToken` entity with `Token`, `UserId`, `ExpiresAtUtc` (30 days), and `IsRevoked = false`
 - **AND** it SHALL return the token string
 
 #### Scenario: Refresh token validation
 
-- **WHEN** `ITokenService.ValidateRefreshTokenAsync(string token)` is called
+- **WHEN** `ITokenService.ValidateRefreshToken(string token)` is called
 - **THEN** it SHALL look up the token in the database
 - **AND** it SHALL return the associated `UserId` if the token is valid, not expired, and not revoked
 - **AND** it SHALL return `Result.Failure(AuthErrors.InvalidRefreshToken)` otherwise
 
 ### Requirement: Refresh Token Entity
 
-The system SHALL define a `RefreshTokenEntity` at `Features/Auth/RefreshTokenEntity.cs` extending `Entity`.
+The system SHALL define a `RefreshToken` entity at `Features/Auth/RefreshToken.cs` extending `Entity`.
 
 #### Scenario: Entity properties
 
-- **WHEN** a RefreshTokenEntity is defined
-- **THEN** it SHALL include `Token` (string, required), `UserId` (Guid, required), `ExpiresAtUtc` (DateTime, required),
-  `IsRevoked` (bool, default false)
+- **WHEN** a RefreshToken entity is defined
+- **THEN** it SHALL include `Token` (string, required), `UserId` (Guid, required), `ExpiresAtUtc` (DateTime, required), `IsRevoked` (bool, default false)
 - **AND** it SHALL have a navigation property to `User`
 
 #### Scenario: Entity configuration
 
-- **WHEN** the RefreshTokenEntity is configured by EF Core
+- **WHEN** the RefreshToken entity is configured by EF Core
 - **THEN** it SHALL have a unique index on `Token`
 - **AND** it SHALL have a foreign key to `User` via `UserId`
 - **AND** it SHALL map to the `refresh_tokens` table
-
-### Requirement: Current User Service
-
-The system SHALL provide `ICurrentUserService` / `CurrentUserService` for resolving the authenticated user.
-
-#### Scenario: Authenticated request
-
-- **WHEN** an authenticated HTTP request is processed
-- **THEN** `ICurrentUserService` SHALL read claims from `HttpContext.User`
-- **AND** it SHALL expose `UserId`, `Email`, and `Permissions`
-
-#### Scenario: Anonymous request
-
-- **WHEN** an unauthenticated HTTP request accesses `ICurrentUserService`
-- **THEN** `UserId` SHALL return `null`
 
 ### Requirement: Authentication Errors
 
@@ -162,14 +126,13 @@ The system SHALL define authentication errors in `Features/Auth/AuthErrors.cs` a
 
 ### Requirement: Auth Endpoint Names
 
-The system SHALL define route constants for auth endpoints in `EndpointNames.Auth`.
+The system SHALL define route constants for the RefreshToken endpoint in `EndpointNames.Auth`.
 
-#### Scenario: Route constants
+#### Scenario: RefreshToken route constant
 
-- **WHEN** auth endpoint routes are needed
-- **THEN** `EndpointNames.Auth.Register` SHALL equal `"Register"` with route `/api/auth/register`
-- **AND** `EndpointNames.Auth.Login` SHALL equal `"Login"` with route `/api/auth/login`
-- **AND** `EndpointNames.Auth.RefreshToken` SHALL equal `"RefreshToken"` with route `/api/auth/refresh-token`
+- **WHEN** the RefreshToken endpoint route is needed
+- **THEN** `EndpointNames.Auth.RefreshToken` SHALL equal `"RefreshToken"`
+- **AND** `EndpointNames.Auth.Routes.RefreshToken` SHALL equal `"/api/auth/refresh-token"`
 
 ### Requirement: Token Service Registration
 

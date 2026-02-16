@@ -86,6 +86,7 @@ public static class DependencyInjection
             builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
 
             return builder;
         }

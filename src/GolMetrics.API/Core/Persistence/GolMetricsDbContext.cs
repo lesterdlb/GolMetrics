@@ -1,3 +1,4 @@
+using GolMetrics.API.Features.Auth;
 using GolMetrics.API.Features.Chat;
 using GolMetrics.API.Features.FootballData;
 using GolMetrics.API.Features.UserManagement;
@@ -13,6 +14,7 @@ public class GolMetricsDbContext(DbContextOptions<GolMetricsDbContext> options)
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<CachedQuery> CachedQueries => Set<CachedQuery>();
+    public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

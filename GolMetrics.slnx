@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/GolMetrics.API/GolMetrics.API.csproj" />
-  </Folder>
+    <Folder Name="/src/">
+        <Project Path="src/GolMetrics.API/GolMetrics.API.csproj"/>
+    </Folder>
+    <Folder Name="/tests/"/>
+    <Project Path="tests/GolMetrics.API.Tests/GolMetrics.API.Tests.csproj"/>
 </Solution>
