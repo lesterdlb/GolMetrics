@@ -1,19 +1,18 @@
 export interface Message {
-    id: string;
-    role: "user" | "assistant";
-    content?: string;
-    type: "text" | "stats-card";
-    timestamp: string;
-    data?: StatsData;
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
 }
 
-export interface StatsData {
-    title: string;
-    value: number;
-    leagues: {
-        name: string;
-        value: number;
-    }[];
-    insight: string;
-    efficiency: number;
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface SendMessageResponse {
+  content: string;
+  conversationId: string;
 }
