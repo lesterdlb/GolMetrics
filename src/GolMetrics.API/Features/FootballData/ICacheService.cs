@@ -2,10 +2,15 @@ namespace GolMetrics.API.Features.FootballData;
 
 public interface ICacheService
 {
-    Task<T> GetOrSetAsync<T>(
+    Task<string?> GetAsync(
         string endpoint,
         Dictionary<string, string> parameters,
-        Func<Task<T>> fetchFactory,
+        CancellationToken cancellationToken = default);
+
+    Task SetAsync(
+        string endpoint,
+        Dictionary<string, string> parameters,
+        string value,
         TimeSpan ttl,
         CancellationToken cancellationToken = default);
 }

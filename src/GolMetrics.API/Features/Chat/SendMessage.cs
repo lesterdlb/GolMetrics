@@ -71,6 +71,11 @@ internal sealed class SendMessage : ISlice
                 await db.SaveChangesAsync(cancellationToken);
             }
 
+            var chatHistory = await db.Messages
+                .Where(m => m.ConversationId == conversation.Id)
+                .OrderBy(m => m.Timestamp)
+                .ToListAsync(cancellationToken);
+
             var userMessage = new Message
             {
                 Content = request.Content,
@@ -83,11 +88,6 @@ internal sealed class SendMessage : ISlice
 
             db.Messages.Add(userMessage);
             await db.SaveChangesAsync(cancellationToken);
-
-            var chatHistory = await db.Messages
-                .Where(m => m.ConversationId == conversation.Id)
-                .OrderBy(m => m.Timestamp)
-                .ToListAsync(cancellationToken);
 
             string aiResponse;
             try

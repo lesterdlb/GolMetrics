@@ -84,12 +84,16 @@ internal sealed class FootballApiClient(
         Dictionary<string, string> parameters,
         CancellationToken cancellationToken)
     {
-        return await cacheService.GetOrSetAsync(
-            endpoint,
-            parameters,
-            () => ExecuteRequestAsync(endpoint, parameters, cancellationToken),
-            CacheTtl,
-            cancellationToken);
+        var cached = await cacheService.GetAsync(endpoint, parameters, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var result = await ExecuteRequestAsync(endpoint, parameters, cancellationToken);
+
+        if (result.IsSuccess)
+            await cacheService.SetAsync(endpoint, parameters, result.Value!, CacheTtl, cancellationToken);
+
+        return result;
     }
 
     private async Task<Result<string>> ExecuteRequestAsync(

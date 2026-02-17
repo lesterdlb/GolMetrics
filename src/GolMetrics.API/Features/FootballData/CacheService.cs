@@ -11,11 +11,9 @@ internal sealed class CacheService(
     TimeProvider timeProvider,
     ILogger<CacheService> logger) : ICacheService
 {
-    public async Task<T> GetOrSetAsync<T>(
+    public async Task<string?> GetAsync(
         string endpoint,
         Dictionary<string, string> parameters,
-        Func<Task<T>> fetchFactory,
-        TimeSpan ttl,
         CancellationToken cancellationToken = default)
     {
         var queryHash = GenerateKey(endpoint, parameters);
@@ -24,21 +22,29 @@ internal sealed class CacheService(
         var cached = await dbContext.CachedQueries
             .FirstOrDefaultAsync(c => c.QueryHash == queryHash, cancellationToken);
 
-        if (cached is not null && cached.ExpiresAt > now)
-        {
-            return JsonSerializer.Deserialize<T>(cached.ResponseData)!;
-        }
+        return cached is not null && cached.ExpiresAt > now ? cached.ResponseData : null;
+    }
 
-        var data = await fetchFactory();
-        var serialized = JsonSerializer.Serialize(data);
+    public async Task SetAsync(
+        string endpoint,
+        Dictionary<string, string> parameters,
+        string value,
+        TimeSpan ttl,
+        CancellationToken cancellationToken = default)
+    {
+        var queryHash = GenerateKey(endpoint, parameters);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
         var sortedParams = JsonSerializer.Serialize(
             parameters.OrderBy(p => p.Key).ToDictionary(p => p.Key, p => p.Value));
 
         try
         {
+            var cached = await dbContext.CachedQueries
+                .FirstOrDefaultAsync(c => c.QueryHash == queryHash, cancellationToken);
+
             if (cached is not null)
             {
-                cached.ResponseData = serialized;
+                cached.ResponseData = value;
                 cached.ExpiresAt = now + ttl;
             }
             else
@@ -48,7 +54,7 @@ internal sealed class CacheService(
                     QueryHash = queryHash,
                     Endpoint = endpoint,
                     Params = sortedParams,
-                    ResponseData = serialized,
+                    ResponseData = value,
                     ExpiresAt = now + ttl
                 });
             }
@@ -59,8 +65,6 @@ internal sealed class CacheService(
         {
             logger.LogWarning(ex, "Failed to persist cache entry for endpoint {Endpoint}", endpoint);
         }
-
-        return data;
     }
 
     private static string GenerateKey(string endpoint, Dictionary<string, string> parameters)

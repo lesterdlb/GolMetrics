@@ -14,6 +14,9 @@ public class CacheServiceTests : IDisposable
     private readonly FakeTimeProvider _timeProvider;
     private readonly CacheService _sut;
 
+    private static readonly Dictionary<string, string> DefaultParams =
+        new() { ["league"] = "39", ["season"] = "2024" };
+
     public CacheServiceTests()
     {
         var options = new DbContextOptionsBuilder<GolMetricsDbContext>()
@@ -26,108 +29,85 @@ public class CacheServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetOrSetAsync_CacheHit_ReturnsStoredDataWithoutCallingFetchFactory()
+    public async Task GetAsync_CacheMiss_ReturnsNull()
     {
-        var endpoint = "fixtures";
-        var parameters = new Dictionary<string, string> { ["league"] = "39", ["season"] = "2024" };
-        var storedData = new TestResponse("cached result");
+        var result = await _sut.GetAsync("fixtures", DefaultParams);
 
-        await _sut.GetOrSetAsync(endpoint, parameters, () => Task.FromResult(storedData), TimeSpan.FromHours(1));
-
-        var fetchFactoryCalled = false;
-        var result = await _sut.GetOrSetAsync(endpoint, parameters, () =>
-        {
-            fetchFactoryCalled = true;
-            return Task.FromResult(new TestResponse("fresh result"));
-        }, TimeSpan.FromHours(1));
-
-        result.Value.Should().Be("cached result");
-        fetchFactoryCalled.Should().BeFalse();
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetOrSetAsync_CacheMiss_InvokesFetchFactoryAndStoresResult()
+    public async Task GetAsync_CacheHit_ReturnsStoredValue()
     {
-        var endpoint = "standings";
-        var parameters = new Dictionary<string, string> { ["league"] = "39" };
-        var fetchFactoryCalled = false;
+        await _sut.SetAsync("fixtures", DefaultParams, "cached body", TimeSpan.FromHours(1));
 
-        var result = await _sut.GetOrSetAsync(endpoint, parameters, () =>
-        {
-            fetchFactoryCalled = true;
-            return Task.FromResult(new TestResponse("fetched data"));
-        }, TimeSpan.FromHours(1));
+        var result = await _sut.GetAsync("fixtures", DefaultParams);
 
-        result.Value.Should().Be("fetched data");
-        fetchFactoryCalled.Should().BeTrue();
-
-        var cached = await _dbContext.CachedQueries.FirstOrDefaultAsync();
-        cached.Should().NotBeNull();
-        cached!.Endpoint.Should().Be("standings");
+        result.Should().Be("cached body");
     }
 
     [Fact]
-    public async Task GetOrSetAsync_ExpiredEntry_RefreshesAndUpdatesStoredData()
+    public async Task GetAsync_ExpiredEntry_ReturnsNull()
     {
-        var endpoint = "fixtures";
-        var parameters = new Dictionary<string, string> { ["league"] = "39" };
-
-        await _sut.GetOrSetAsync(endpoint, parameters,
-            () => Task.FromResult(new TestResponse("old data")), TimeSpan.FromMinutes(5));
+        await _sut.SetAsync("fixtures", DefaultParams, "old body", TimeSpan.FromMinutes(5));
 
         _timeProvider.Advance(TimeSpan.FromMinutes(10));
 
-        var result = await _sut.GetOrSetAsync(endpoint, parameters,
-            () => Task.FromResult(new TestResponse("new data")), TimeSpan.FromMinutes(5));
+        var result = await _sut.GetAsync("fixtures", DefaultParams);
 
-        result.Value.Should().Be("new data");
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetAsync_StoresEntryInDatabase()
+    {
+        await _sut.SetAsync("standings", DefaultParams, "body", TimeSpan.FromHours(1));
+
+        var entry = await _dbContext.CachedQueries.FirstOrDefaultAsync();
+        entry.Should().NotBeNull();
+        entry!.Endpoint.Should().Be("standings");
+        entry.ResponseData.Should().Be("body");
+    }
+
+    [Fact]
+    public async Task SetAsync_ExistingEntry_UpdatesValueAndExpiry()
+    {
+        await _sut.SetAsync("fixtures", DefaultParams, "old body", TimeSpan.FromMinutes(5));
+
+        _timeProvider.Advance(TimeSpan.FromMinutes(10));
+
+        await _sut.SetAsync("fixtures", DefaultParams, "new body", TimeSpan.FromMinutes(5));
 
         var entries = await _dbContext.CachedQueries.ToListAsync();
         entries.Should().HaveCount(1);
+        entries[0].ResponseData.Should().Be("new body");
     }
 
     [Fact]
-    public async Task GetOrSetAsync_SameParametersDifferentOrder_ProducesSameCacheKey()
+    public async Task GetAsync_SameParametersDifferentOrder_ProducesSameCacheKey()
     {
-        var endpoint = "fixtures";
         var paramsA = new Dictionary<string, string> { ["season"] = "2024", ["league"] = "39" };
         var paramsB = new Dictionary<string, string> { ["league"] = "39", ["season"] = "2024" };
 
-        await _sut.GetOrSetAsync(endpoint, paramsA,
-            () => Task.FromResult(new TestResponse("result A")), TimeSpan.FromHours(1));
+        await _sut.SetAsync("fixtures", paramsA, "result A", TimeSpan.FromHours(1));
 
-        var fetchCalled = false;
-        var result = await _sut.GetOrSetAsync(endpoint, paramsB, () =>
-        {
-            fetchCalled = true;
-            return Task.FromResult(new TestResponse("result B"));
-        }, TimeSpan.FromHours(1));
+        var result = await _sut.GetAsync("fixtures", paramsB);
 
-        fetchCalled.Should().BeFalse();
-        result.Value.Should().Be("result A");
+        result.Should().Be("result A");
     }
 
     [Fact]
-    public async Task GetOrSetAsync_DifferentEndpoints_ProduceDifferentCacheKeys()
+    public async Task GetAsync_DifferentEndpoints_ProduceDifferentCacheKeys()
     {
-        var parameters = new Dictionary<string, string> { ["league"] = "39" };
+        await _sut.SetAsync("fixtures", DefaultParams, "fixtures data", TimeSpan.FromHours(1));
 
-        await _sut.GetOrSetAsync("fixtures", parameters,
-            () => Task.FromResult(new TestResponse("fixtures data")), TimeSpan.FromHours(1));
+        var result = await _sut.GetAsync("standings", DefaultParams);
 
-        var fetchCalled = false;
-        var result = await _sut.GetOrSetAsync("standings", parameters, () =>
-        {
-            fetchCalled = true;
-            return Task.FromResult(new TestResponse("standings data"));
-        }, TimeSpan.FromHours(1));
-
-        fetchCalled.Should().BeTrue();
-        result.Value.Should().Be("standings data");
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetOrSetAsync_SaveChangesThrows_ReturnsFetchedDataAnyway()
+    public async Task SetAsync_SaveChangesThrows_DoesNotPropagateException()
     {
         var options = new DbContextOptionsBuilder<GolMetricsDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -136,20 +116,15 @@ public class CacheServiceTests : IDisposable
         await using var failingContext = new FailingDbContext(options);
         var sut = new CacheService(failingContext, _timeProvider, NullLogger<CacheService>.Instance);
 
-        var result = await sut.GetOrSetAsync("fixtures",
-            new Dictionary<string, string> { ["league"] = "39" },
-            () => Task.FromResult(new TestResponse("api data")),
-            TimeSpan.FromHours(1));
+        var act = async () => await sut.SetAsync("fixtures", DefaultParams, "body", TimeSpan.FromHours(1));
 
-        result.Value.Should().Be("api data");
+        await act.Should().NotThrowAsync();
     }
 
     public void Dispose()
     {
         _dbContext.Dispose();
     }
-
-    private sealed record TestResponse(string Value);
 
     private sealed class FailingDbContext(DbContextOptions<GolMetricsDbContext> options)
         : GolMetricsDbContext(options)

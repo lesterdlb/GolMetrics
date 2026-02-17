@@ -16,3 +16,10 @@ export interface SendMessageResponse {
   content: string;
   conversationId: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  hasApiKey: boolean;
+  createdAt: string;
+}
