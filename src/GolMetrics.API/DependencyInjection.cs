@@ -33,7 +33,8 @@ public static class DependencyInjection
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
 
-            builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+            builder.Services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly,
+                includeInternalTypes: true);
             builder.Services.AddSlices();
             builder.Services.AddOpenApi();
             builder.Services.AddSingleton(TimeProvider.System);
