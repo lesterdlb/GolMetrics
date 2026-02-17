@@ -18,4 +18,9 @@ public static class FootballErrors
         "Football.InvalidParameters",
         "The provided parameters returned an error from API-Football.",
         ErrorCategory.BadRequest);
+
+    public static Error AiServiceUnavailable => new(
+        "Football.AiServiceUnavailable",
+        "The AI service is currently unavailable.",
+        ErrorCategory.BadRequest);
 }

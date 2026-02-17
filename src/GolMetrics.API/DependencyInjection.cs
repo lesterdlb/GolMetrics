@@ -1,3 +1,5 @@
+#pragma warning disable SKEXP0070
+
 using System.Text;
 using FluentValidation;
 using GolMetrics.API.Core.Abstractions;
@@ -130,6 +132,9 @@ public static class DependencyInjection
                 kernelBuilder.AddGoogleAIGeminiChatCompletion(modelId, apiKey);
                 return kernelBuilder.Build();
             });
+
+            builder.Services.AddScoped<FootballPlugin>();
+            builder.Services.AddScoped<ISemanticKernelService, SemanticKernelService>();
 
             return builder;
         }
