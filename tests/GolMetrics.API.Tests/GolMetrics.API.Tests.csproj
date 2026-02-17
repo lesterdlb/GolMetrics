@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Bogus" Version="35.6.5"/>
         <PackageReference Include="coverlet.collector" Version="6.0.4"/>
         <PackageReference Include="FluentAssertions" Version="8.8.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3"/>
