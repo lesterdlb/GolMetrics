@@ -38,7 +38,7 @@ rules:
     - Specify HTTP status codes for all API endpoint scenarios
     - Define feature-specific errors as static properties on `<Feature>Errors.cs` classes
   design:
-    - Follow Vertical Slice pattern as defined in project-setup/spec.md and architecture/spec.md: `internal sealed class : ISlice` (never public)
+    - "Follow Vertical Slice pattern as defined in project-setup/spec.md and architecture/spec.md: `internal sealed class : ISlice` (never public)"
     - Nest Command/Query/Validator/Handler as `internal sealed` classes inside the slice
     - Use `public sealed record` for all DTOs (requests, responses)
     - Dispatch commands/queries via MediatR `ISender.Send()`, never call handlers directly
