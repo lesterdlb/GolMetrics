@@ -17,6 +17,7 @@ public static class ResultExtensions
                 ErrorCategory.Forbidden => StatusCodes.Status403Forbidden,
                 ErrorCategory.NotFound => StatusCodes.Status404NotFound,
                 ErrorCategory.Conflict => StatusCodes.Status409Conflict,
+                ErrorCategory.BadGateway => StatusCodes.Status502BadGateway,
                 _ => StatusCodes.Status500InternalServerError
             };
 

@@ -20,13 +20,15 @@ public static class EndpointNames
     {
         public const string SendMessage = nameof(SendMessage);
         public const string GetConversations = nameof(GetConversations);
-        public const string GetConversation = nameof(GetConversation);
+        public const string GetConversationMessages = nameof(GetConversationMessages);
+        public const string CreateConversation = nameof(CreateConversation);
 
         public static class Routes
         {
-            public const string SendMessage = "/api/chat";
+            public const string SendMessage = "/api/chat/message";
             public const string GetConversations = "/api/conversations";
-            public const string GetConversation = "/api/conversations/{id:guid}";
+            public const string GetConversationMessages = "/api/conversations/{id:guid}/messages";
+            public const string CreateConversation = "/api/conversations";
         }
     }
 

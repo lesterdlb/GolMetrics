@@ -6,5 +6,6 @@ public enum ErrorCategory
     Unauthorized,
     Forbidden,
     NotFound,
-    Conflict
+    Conflict,
+    BadGateway
 }
