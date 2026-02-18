@@ -1,5 +1,6 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o los de corrección o adición de funcionalidades que consideres más relevantes.
-> Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+# Registro de Uso de IA - GolMetrics
+
+Este proyecto ha sido desarrollado utilizando una metodología de **Desarrollo Guiado por Especificaciones (Spec-Driven Development)** mediante el framework **OpenSpec**. En lugar de interacciones informales con la IA, se utilizó un flujo de trabajo estructurado donde cada cambio fue precedido por un diseño técnico formal, permitiendo que asistentes como Claude Code y Gemini CLI ejecutaran implementaciones precisas y coherentes con la arquitectura definida.
 
 ## Índice
 
@@ -9,59 +10,61 @@
 4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Desarrollo (Entrega 2)](#desarrollo-entrega-2)
-8. [Pull requests](#8-pull-requests)
+7. [Desarrollo con OpenSpec](#7-desarrollo-con-openspec)
+8. [Refinamiento Humano y Correcciones](#8-refinamiento-humano-y-correcciones)
 
 ---
 
 ## 1. Descripción general del producto
 
-**Prompt 1:**
-"Actúa como un Product Manager experto en deportes. Analiza la idea de un chatbot para estadísticas de fútbol y genera una descripción general del producto que incluya: visión, propuesta de valor para aficionados y periodistas, y las características principales del MVP."
+**Prompt:**
+"Actúa como un Product Manager senior en tecnología deportiva. Analiza la viabilidad de un chatbot que simplifique el acceso a estadísticas de fútbol complejas. Genera una visión de producto que destaque la eliminación de la fricción en la búsqueda de datos, una propuesta de valor basada en el modelo BYOK (Bring Your Own Key) y define el alcance de un MVP funcional."
 
 ---
 
 ## 2. Arquitectura del Sistema
 
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1 (Generación del esqueleto):**
-"Dada la proximidad de la entrega, necesito implementar un 'Walking Skeleton' que conecte todas las capas. Genera los comandos necesarios para crear una solución .NET 10 Web API y un proyecto React con Vite. Incluye la configuración de Docker (Dockerfiles y docker-compose.yml) para orquestar el frontend, el backend y una base de datos PostgreSQL."
+**Prompt:**
+"Diseña una arquitectura moderna para una aplicación Full-Stack (.NET 10 y React 19). La solución debe seguir el patrón de Vertical Slice Architecture para maximizar la cohesión. Define la integración de Semantic Kernel para la orquestación de IA y describe cómo se estructurarán las capas de abstracción core para asegurar que el sistema sea testable y escalable."
 
 ---
 
 ## 3. Modelo de Datos
 
-**Prompt 1:**
-"Diseña un modelo de datos relacional para GolMetrics en PostgreSQL. Necesito entidades para Usuarios (con soporte para API Keys encriptadas), Conversaciones, Mensajes y una tabla de caché para resultados de la API externa."
+**Prompt:**
+"Genera un esquema de base de datos relacional en PostgreSQL que integre ASP.NET Identity para la gestión de usuarios. Incluye entidades para conversaciones, mensajes con roles, y una tabla de caché técnica que utilice columnas JSONB para almacenar respuestas de APIs externas de forma eficiente. Asegura que el modelo incluya campos de auditoría y tokens de concurrencia."
 
 ---
 
 ## 5. Historias de Usuario
 
-**Prompt 1:**
-"Genera 5 historias de usuario clave para un MVP de estadísticas de fútbol. Incluye criterios de aceptación detallados, enfocándote en la consulta de goleadores, tablas de posiciones y la configuración de claves de API personales (BYOK)."
+**Prompt:**
+"Define historias de usuario detalladas para el flujo E2E de GolMetrics. Cada historia debe seguir el formato estándar e incluir criterios de aceptación técnicos y funcionales, enfocándose especialmente en la seguridad de las claves de API del usuario y la precisión de las respuestas del chatbot mediante el uso de herramientas (plugins) de IA."
 
 ---
 
 ## 6. Tickets de Trabajo
 
-**Prompt 1:**
-"Basado en las historias de usuario anteriores, desglosa el trabajo en tickets técnicos. Utiliza una estimación tipo T-shirt sizing y asegura la trazabilidad entre el ticket y la funcionalidad del sistema."
+**Prompt:**
+"Basado en las especificaciones de arquitectura y las historias de usuario, genera un roadmap de desarrollo desglosado en 20 tickets técnicos atómicos. Organiza los tickets de forma incremental: primero la infraestructura core, luego la identidad, el pipeline de IA, las funcionalidades de chat y finalmente el despliegue automatizado."
 
 ---
 
-## Desarrollo (Entrega 2)
+## 7. Desarrollo con OpenSpec
 
-**Prompt 1 (Conexión Frontend-Backend):**
-"Analiza el código del frontend y del backend. Crea un endpoint '/api/chat' en .NET que responda con un mensaje estático de 'Proof of Life'. Luego, actualiza la lógica de React para que, al enviar un mensaje, realice una petición real a este endpoint y muestre la respuesta en la interfaz."
+En esta fase se utilizaron comandos de **OpenSpec** para guiar a la IA. El flujo no consistió en pedir código directamente, sino en validar artefactos de diseño antes de la implementación.
 
-**Prompt 2 (Configuración de entornos Local/Docker):**
-"La aplicación debe funcionar tanto en Docker como en desarrollo local. Configura un archivo `.env.development` para el frontend y habilita el middleware de CORS en el backend de .NET para permitir peticiones desde el origen del servidor de desarrollo de Vite."
+**Ejemplo de comando de flujo:**
+`/opsx:ff TICK-010: Semantic Kernel service and FootballPlugin`
+
+Este comando ordenó a la IA analizar las especificaciones existentes (`openspec/specs/`) y generar un plan de implementación (`proposal.md`, `design.md`, `tasks.md`) coherente con todo el contexto del proyecto antes de escribir una sola línea de C#.
 
 ---
 
-## 8. Pull Requests
+## 8. Refinamiento Humano y Correcciones
 
-**Prompt 1:**
-"Genera una descripción profesional para un Pull Request de la 'Entrega 2'. El resumen debe explicar la implementación del Walking Skeleton, la arquitectura de contenedores y cómo verificar la conexión exitosa entre el cliente React y la API."
+A pesar de la precisión de OpenSpec, fue necesaria la intervención humana para resolver detalles complejos de integración:
+
+1.  **Registro de TimeProvider:** La IA generó el servicio de caché pero olvidó registrar el `TimeProvider.System` en el contenedor de DI. Se corrigió manualmente en `DependencyInjection.cs`.
+2.  **Ciclo de Vida del Kernel:** Inicialmente, la IA propuso el `Kernel` como Singleton, lo cual causaba conflictos con dependencias Scoped (como el cliente de API). Se corrigió utilizando el patrón de `.Clone()` por cada petición para inyectar plugins dependientes del usuario.
+3.  **Configuración de Nginx en Render:** Se ajustó manualmente el archivo `nginx.render.conf` para asegurar que el ruteo de la SPA funcionara correctamente en el puerto dinámico asignado por Render.
