@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: golmetrics-api
+    runtime: docker
+    plan: free
+    branch: finalproject-LDLB
+    dockerfilePath: src/GolMetrics.API/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: golmetrics-db
+          property: connectionString
+      - key: TokenOptions__SecretKey
+        generateValue: true
+      - key: TokenOptions__Issuer
+        value: GolMetrics
+      - key: TokenOptions__Audience
+        value: GolMetrics
+      - key: TokenOptions__ExpirationMinutes
+        value: "60"
+      - key: Encryption__Key
+        generateValue: true
+      - key: ApiFootball__BaseUrl
+        value: https://v3.football.api-sports.io
+      - key: ApiFootball__ApiKey
+        sync: false
+      - key: Gemini__ApiKey
+        sync: false
+      - key: Gemini__ModelId
+        value: gemini-2.0-flash
+
+  - type: web
+    name: golmetrics-web
+    runtime: docker
+    plan: free
+    branch: finalproject-LDLB
+    dockerfilePath: src/GolMetrics.Web/Dockerfile
+    dockerContext: src/GolMetrics.Web
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: NGINX_CONF
+        value: nginx.render.conf
+      - key: PORT
+        value: "10000"
+
+databases:
+  - name: golmetrics-db
+    plan: free

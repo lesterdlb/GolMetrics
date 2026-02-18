@@ -1,4 +1,4 @@
-﻿FROM node:24.13.0-alpine AS build
+FROM node:24.13.0-alpine AS build
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
@@ -14,9 +14,12 @@ RUN npm run build
 
 FROM nginx:alpine AS production
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ARG NGINX_CONF=nginx.conf
+ARG PORT=5173
 
-EXPOSE 5173
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
+
+EXPOSE ${PORT}
 
 CMD ["nginx", "-g", "daemon off;"]

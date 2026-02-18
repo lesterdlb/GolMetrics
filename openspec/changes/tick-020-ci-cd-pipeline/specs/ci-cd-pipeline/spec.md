@@ -1,10 +1,4 @@
-# CI/CD Pipeline
-
-## Purpose
-
-Specifies the GitHub Actions CI/CD pipeline for automated build, test, and deployment to Render via deploy hooks.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Pipeline Triggers
 
@@ -70,6 +64,8 @@ The pipeline SHALL deploy to Render on successful pushes to the branch.
 - **WHEN** deployment credentials are required
 - **THEN** the deploy hook URLs SHALL be stored as GitHub repository secrets named `RENDER_DEPLOY_HOOK_API` and `RENDER_DEPLOY_HOOK_WEB`
 
+## ADDED Requirements
+
 ### Requirement: Render Blueprint
 
 The project SHALL include a `render.yaml` blueprint at the repository root for infrastructure-as-code deployment.
@@ -89,14 +85,14 @@ The project SHALL include a `render.yaml` blueprint at the repository root for i
 - **WHEN** the API service is configured
 - **THEN** it SHALL set `ASPNETCORE_ENVIRONMENT` to `Production`
 - **AND** it SHALL set `ConnectionStrings__DefaultConnection` via `fromDatabase` referencing the database's `connectionString` property
-- **AND** it SHALL set `TokenOptions__SecretKey` with `generateValue: true` (32+ character random string)
+- **AND** it SHALL set `TokenOptions__SecretKey` with `generateValue: true`
 - **AND** it SHALL set `TokenOptions__Issuer` to `GolMetrics`
 - **AND** it SHALL set `TokenOptions__Audience` to `GolMetrics`
 - **AND** it SHALL set `TokenOptions__ExpirationMinutes` to `60`
-- **AND** it SHALL set `Encryption__Key` with `generateValue: true` (32+ character random string)
+- **AND** it SHALL set `Encryption__Key` with `generateValue: true`
 - **AND** it SHALL set `ApiFootball__BaseUrl` to `https://v3.football.api-sports.io`
-- **AND** it SHALL set `ApiFootball__ApiKey` with `sync: false` (user provides at blueprint creation)
-- **AND** it SHALL set `Gemini__ApiKey` with `sync: false` (user provides at blueprint creation)
+- **AND** it SHALL set `ApiFootball__ApiKey` with `sync: false`
+- **AND** it SHALL set `Gemini__ApiKey` with `sync: false`
 - **AND** it SHALL set `Gemini__ModelId` to `gemini-2.0-flash`
 
 #### Scenario: API health check
@@ -118,13 +114,6 @@ The project SHALL include a `render.yaml` blueprint at the repository root for i
 
 - **WHEN** the Web service is configured
 - **THEN** it SHALL set `VITE_API_URL` via `fromService` referencing the `golmetrics-api` service's `host` property with `https://` prefix
-- **AND** the nginx configuration SHALL be updated to remove the API proxy block (`location /api`) since the frontend will call the API directly via its public Render URL
-
-#### Scenario: Frontend port configuration
-
-- **WHEN** the Web service is configured on Render
-- **THEN** the nginx configuration SHALL listen on port `10000` (Render's expected port for HTTP services)
-- **AND** the Dockerfile SHALL expose port `10000`
 
 #### Scenario: PostgreSQL database definition
 
@@ -146,7 +135,7 @@ The frontend SHALL communicate with the API via the API's public Render URL, not
 
 - **WHEN** the API is deployed to Render
 - **THEN** the API SHALL allow CORS requests from the frontend's Render URL
-- **AND** the CORS policy SHALL allow credentials, common headers, and standard HTTP methods
+- **AND** the CORS policy SHALL allow any origin, any header, and any method
 
 ### Requirement: Workflow File Location
 
@@ -159,3 +148,10 @@ The GitHub Actions workflow SHALL be stored at `.github/workflows/ci-cd.yml`.
 - **AND** it SHALL define two jobs: `build-and-test` and `deploy`
 - **AND** the `deploy` job SHALL have `needs: build-and-test`
 - **AND** the `deploy` job SHALL have `if: github.event_name == 'push'` to skip deployment on PRs
+
+## REMOVED Requirements
+
+### Requirement: Code Coverage
+
+**Reason**: Code coverage collection and reporting is out of scope for this change. The pipeline focuses on build, test, and deploy to Render.
+**Migration**: None required. Coverage can be added in a future change.
