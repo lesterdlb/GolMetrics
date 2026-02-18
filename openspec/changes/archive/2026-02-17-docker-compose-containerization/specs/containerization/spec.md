@@ -1,51 +1,4 @@
-# Containerization
-
-## Purpose
-
-Specifies the Docker and Docker Compose configuration for the full stack (backend, frontend, database).
-
-## Requirements
-
-### Requirement: Backend Dockerfile
-
-The backend SHALL be containerized using a multi-stage Docker build.
-
-#### Scenario: Build and publish
-
-- **WHEN** the backend Docker image is built
-- **THEN** it SHALL use a .NET SDK stage for restore, build, and publish in Release configuration
-- **AND** it SHALL use a .NET ASP.NET runtime image for the final stage
-
-#### Scenario: Runtime configuration
-
-- **WHEN** the backend container starts
-- **THEN** it SHALL expose port 8080
-- **AND** the entrypoint SHALL be `dotnet GolMetrics.API.dll`
-
-### Requirement: Backend Dockerfile cleanup
-
-The backend Dockerfile SHALL only expose ports that are used.
-
-#### Scenario: Port exposure
-
-- **WHEN** the backend Docker image is built
-- **THEN** the Dockerfile SHALL expose only port 8080
-- **AND** it SHALL NOT expose port 8081
-
-### Requirement: Frontend Dockerfile
-
-The frontend SHALL be containerized using a multi-stage Docker build.
-
-#### Scenario: Build stage
-
-- **WHEN** the frontend Docker image is built
-- **THEN** it SHALL use a Node.js stage that runs `npm ci` then `npm run build`
-
-#### Scenario: Serving stage
-
-- **WHEN** the frontend container starts
-- **THEN** it SHALL serve the `dist/` output via nginx
-- **AND** it SHALL use a custom `nginx.conf` for SPA routing and API proxying
+## MODIFIED Requirements
 
 ### Requirement: Docker Compose
 
@@ -70,7 +23,7 @@ The system SHALL provide a Docker Compose configuration for the full stack.
 - **AND** it SHALL receive database connection string via `ConnectionStrings__DefaultConnection`
 - **AND** it SHALL receive JWT configuration via `TokenOptions__SecretKey`, `TokenOptions__Issuer`, `TokenOptions__Audience`, `TokenOptions__ExpirationMinutes`
 - **AND** it SHALL receive encryption configuration via `Encryption__Key`
-- **AND** it SHALL include a health check using `curl` against a health endpoint
+- **AND** it SHALL include a health check using `wget` against a health endpoint
 
 #### Scenario: Web service
 
@@ -83,6 +36,8 @@ The system SHALL provide a Docker Compose configuration for the full stack.
 - **WHEN** `docker compose up --build` is run
 - **THEN** all 3 services SHALL start in order: `db` -> `api` -> `web`
 - **AND** each service SHALL wait for its dependencies to be healthy before starting
+
+## ADDED Requirements
 
 ### Requirement: Dockerignore
 
@@ -98,6 +53,16 @@ The project SHALL include `.dockerignore` files to optimize Docker build context
 - **WHEN** the Web Docker image is built from `src/GolMetrics.Web/`
 - **THEN** a `.dockerignore` file SHALL exclude `node_modules/`, `.git/`, `dist/`, and `*.md`
 
+### Requirement: Backend Dockerfile cleanup
+
+The backend Dockerfile SHALL only expose ports that are used.
+
+#### Scenario: Port exposure
+
+- **WHEN** the backend Docker image is built
+- **THEN** the Dockerfile SHALL expose only port 8080
+- **AND** it SHALL NOT expose port 8081
+
 ### Requirement: Service restart policy
 
 All services SHALL define restart policies.
@@ -106,17 +71,3 @@ All services SHALL define restart policies.
 
 - **WHEN** a service container crashes
 - **THEN** it SHALL restart automatically using `restart: unless-stopped`
-
-### Requirement: Health Check
-
-The system SHALL be reachable when the stack is running.
-
-#### Scenario: API reachability
-
-- **WHEN** the stack is running
-- **THEN** the API SHALL be reachable at `http://localhost:7000`
-
-#### Scenario: Frontend reachability
-
-- **WHEN** the stack is running
-- **THEN** the frontend SHALL be reachable at `http://localhost:5173`

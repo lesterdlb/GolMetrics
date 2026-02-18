@@ -7,23 +7,42 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Database=golmetrics_db;Username=admin;Password=password123
+      - TokenOptions__SecretKey=DevSecretKeyMustBeAtLeast32Characters!
+      - TokenOptions__Issuer=GolMetrics
+      - TokenOptions__Audience=GolMetrics
+      - TokenOptions__ExpirationMinutes=60
+      - Encryption__Key=DevEncryptionKeyMustBe32CharsLong!
+      - ApiFootball__BaseUrl=https://v3.football.api-sports.io
+      - ApiFootball__ApiKey=${API_FOOTBALL_API_KEY}
+      - Gemini__ApiKey=${GEMINI_API_KEY}
+      - Gemini__ModelId=gemini-2.0-flash
     ports:
       - "7000:8080"
     depends_on:
-      - db
-  
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
   web:
     build:
       context: ./src/GolMetrics.Web
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:7000
     container_name: golmetrics.web
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:7000
     depends_on:
-      - api
-  
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
   db:
     image: postgres:16-alpine
     container_name: golmetrics.db
@@ -35,6 +54,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d golmetrics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:

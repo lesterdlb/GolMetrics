@@ -1,4 +1,7 @@
-﻿FROM node:24.13.0-alpine as build
+﻿FROM node:24.13.0-alpine AS build
+
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /app
 
